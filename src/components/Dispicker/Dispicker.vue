@@ -62,7 +62,7 @@ export default {
             //根据上一个select联动后面的select
             this.$nextTick(()=>{
                 this.options.splice(index+1,2-index);
-                let children = value?this.recursion(date,e.target.value).children:[];
+                let children = value?this.recursion(date,value).children:[];
                 if(children && children.length>0){
                     this.$set(this.options,index+1,children)
                 }
