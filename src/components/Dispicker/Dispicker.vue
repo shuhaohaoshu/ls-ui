@@ -100,7 +100,7 @@ export default {
         &:first-child{
             margin-left: 0;
         }
-        margin-left: 10px;
+        margin-left: 15px;
     }
 }
 </style>

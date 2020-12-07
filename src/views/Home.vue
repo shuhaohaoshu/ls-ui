@@ -28,6 +28,12 @@
         <Upload formKey="img" @upload="getForm"></Upload>
       </div>
     </div>
+    <div class="item">
+      <div class="left">ls-ui Pagination</div>
+      <div class="right">
+        <Pagination></Pagination>
+      </div>
+    </div>
   </div>
 </template>
 

@@ -63,8 +63,8 @@ export default {
     overflow: hidden;
     >.item{
         float: left;
-        width: 160px;
-        height: 160px;
+        width: 150px;
+        height: 150px;
         display: flex;
         align-items: center;
         justify-content: center;
