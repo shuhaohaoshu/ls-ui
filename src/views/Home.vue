@@ -31,7 +31,7 @@
     <div class="item">
       <div class="left">ls-ui Pagination</div>
       <div class="right">
-        <Pagination></Pagination>
+        <Pagination @page="pageNumber"></Pagination>
       </div>
     </div>
   </div>
@@ -62,6 +62,9 @@ export default {
     },
     getForm(e){
       console.log(e,'-------Upload')
+    },
+    pageNumber(e){
+      console.log(e,'-------Pagination')
     }
   }
 }

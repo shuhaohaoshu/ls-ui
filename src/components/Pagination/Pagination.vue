@@ -2,17 +2,17 @@
   <div class="Pagination">
       <div class="total">共{{total}}条</div>
       <div class="page">
-          <div class="prev iconfont iconzuo" @click="prev"></div>
-          <div class="first item" v-if="firstEllipsis" @click="goPage(first)">{{first}}</div>
+          <div class="prev iconfont iconzuo" :class="currentPage==1?'stop':''" @click="prev"></div>
+          <div class="first item" v-if="firstEllipsis" @click="goPage(1)">1</div>
           <div class="ellipsis iconfont iconshenglvehao" v-if="firstEllipsis"></div>
-          <div class="item" :class="currentPage==item?'on':''" v-for="(item,index) in pageArr" :key="index" @click="goPage(item)">{{item}}</div>
+          <div class="item" :class="currentPage==item?'on':''" v-for="(item,index) in pages" :key="index" @click="goPage(item)">{{item}}</div>
           <div class="ellipsis iconfont iconshenglvehao" v-if="nextEllipsis"></div>
-          <div class="last item" v-if="nextEllipsis" @click="goPage(last)">{{last}}</div>
-          <div class="next iconfont iconyou" @click="next"></div>
+          <div class="last item" v-if="nextEllipsis" @click="goPage(totalPages)">{{totalPages}}</div>
+          <div class="next iconfont iconyou" :class="currentPage==totalPages?'stop':''" @click="next"></div>
       </div>
       <div class="jump">
-          前往<input type="text">页
-          <div class="go">GO</div>
+          前往<input :value="goValue" @input="pageNumber">页
+          <div class="go" :class="goValue<1 || goValue > totalPages?'stop':''" @click="goPage(goValue)">确定</div>
       </div>
   </div>
 </template>
@@ -21,83 +21,93 @@
 export default {
     name:'Pagination',
     props:{
-        page:{
+        //第几页
+        pageIndex:{
             type:Number,
-            default:2,
+            default:1,
         },
+        //每页条数
         pageSize:{
             type:Number,
             default:10,
         },
+        //总条数
         total:{
             type:Number,
-            default:86
-        }
+            default:60
+        },
     },
     data(){
         return{
             currentPage:1,
-            pageArr:[],
+            goValue:'',
         }
     },
     computed:{
-        firstEllipsis:function(){
-            return this.currentPage>=5?true:false;
+        //前面省略号显示状态
+        firstEllipsis(){
+            let first = this.pages[0];
+            return first!=1?true:false;
         },
-        nextEllipsis:function(){
-            return this.pageArr.slice(-1)[0]!=this.last?true:false;
+        //后面省略号显示状态
+        nextEllipsis(){
+            let last = this.pages[this.pages.length-1];
+            return last!=this.totalPages?true:false;
         },
-        first:function(){
-            return 1;
-        },
-        last:function(){
+        //总共页数
+        totalPages(){
             return Math.ceil(this.total/this.pageSize);
+        },
+        pages(){
+            let ct = this.currentPage;
+            let tp = this.totalPages;
+            // 中间五个数
+            // 当ct > 3 && ct < tp - 3时，发现每次加减页码，中间的五个数都会变，而当ct < 3|| ct >= tp - 3时，中间的五个数都是稳定的
+            if(tp>=5){
+                if (ct > 3 && ct < tp - 3) {
+                    return [ct - 2, ct - 1, ct, ct + 1, ct + 2];
+                } else if (ct <= 3) {
+                    return [1, 2, 3, 4, 5];
+                } else {
+                    return [tp - 4, tp - 3, tp - 2, tp - 1 , tp];
+                }
+            }else{
+                return [1,2,3,4,5].filter(item => item <= tp);
+            }
         }
     },
     created(){
-        this.currentPage = this.page;
-        let pageData = [];
-        let len = this.total<5?this.total:5;
-        let num = this.currentPage<3?1:this.currentPage-2;
-        for(let i = 0;i<len;i++){
-            let item = num++;
-            if(item>this.last){
-                break;
-            }
-            pageData.push(item)
-        }
-        this.pageArr = pageData;
+        this.currentPage = this.pageIndex;
     },
     methods:{
+        //限制输入框只能输入数字
+        pageNumber(e){
+            e.target.value = e.target.value.replace(/[^\d]/g,'');
+            this.goValue = e.target.value;
+        },
+        //页数跳转
         goPage(page){
-            this.currentPage = page;
-            if(page == this.first || page == this.last){
+            if(page<1 || page>this.totalPages){
                 return;
             }
-            let pageData = [];
-            let num;
-            let first = this.pageArr.slice(0)[0];
-            let last = this.pageArr.slice(-1)[0];
-            if(page == first || page == last){
-                num = page-2;
-                for(let i = 0;i<5;i++){
-                    let item = num++;
-                    if(item>this.last){
-                        break;
-                    }
-                    pageData.push(item)
-                }
-                this.pageArr = pageData;
-            }
+            this.currentPage = page;
+            //返回页数给父组件
+            this.$emit('page',this.currentPage);
         },
+        //上一页
         prev(){
             if(this.currentPage>1){
-                this.goPage(this.currentPage-1);
+                this.currentPage--;
+                //返回页数给父组件
+                this.$emit('page',this.currentPage);
             }
         },
+        //下一页
         next(){
-            if(this.currentPage<this.last){
-                this.goPage(this.currentPage+1);
+            if(this.currentPage<this.totalPages){
+                this.currentPage++;
+                //返回页数给父组件
+                this.$emit('page',this.currentPage);
             }
         },
     }
@@ -135,6 +145,10 @@ export default {
             &.item,&.prev,&.next{
                 cursor: pointer;
             }
+            &.stop{
+                cursor: not-allowed;
+                color: #ddd; 
+            }
         }
     }
     >.jump{
@@ -151,7 +165,7 @@ export default {
             text-align: center;
         }
         >.go{
-            width: 38px;
+            width: 48px;
             height: 38px;
             text-align: center;
             line-height: 38px;
@@ -161,6 +175,9 @@ export default {
             border-radius: 3px;
             margin-left: 8px;
             cursor: pointer;
+        }
+        >.stop{
+            cursor: not-allowed;
         }
     }
 }
